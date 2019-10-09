@@ -1,0 +1,41 @@
+/**
+ * Created by ronanwilliams on 2019-10-07.
+ */
+
+.THIS area {
+    background-color: red;
+}
+
+.THIS area:hover {
+    background-color: transparent;
+}
+
+.THIS area:-webkit-any-link {
+    cursor: pointer;
+}
+
+.THIS.quote-block {
+    padding: 10px;
+    border-bottom: 0.5px solid grey;
+}
+
+.THIS .block-title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.THIS .step {
+    background-color: black;
+    border-radius: 50%;
+    color: white;
+    height: 25px;
+    width: 25px;
+    margin-right: 5px;
+    display: inline-block;
+    text-align: center;
+}
+
+.THIS .block-action-panel {
+
+}
