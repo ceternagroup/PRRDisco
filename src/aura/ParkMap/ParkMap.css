@@ -17,6 +17,8 @@
 .THIS.quote-block {
     padding: 10px;
     border-bottom: 0.5px solid grey;
+    position: relative;
+    width: 100%;
 }
 
 .THIS .block-title {
@@ -38,4 +40,45 @@
 
 .THIS .block-action-panel {
 
+}
+
+.THIS .price-block {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 15px;
+    font-size: 30px;
+}
+
+.THIS .image-container-small {
+    width: 200px;
+}
+
+.THIS .unit-grid {
+    display: grid;
+    grid-template-columns: 33% 33% 33%;
+    width: 100%;
+    position: relative;
+    min-height: 300px;
+}
+
+.THIS .unit-column {
+
+    padding: 5px;
+    width: 95%;
+    height: 100%;
+    cursor: pointer;
+    /*box-shadow: 5px 5px 10px;*/
+
+
+}
+
+.THIS .pitch-container {
+    display: grid;
+    grid-template-columns: 50% 50%;
+}
+
+.THIS .pitch-image-block {
+    padding: 10px;
+    position: relative;
 }
