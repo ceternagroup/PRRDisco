@@ -1,0 +1,12 @@
+<!--
+ - Created by ronanwilliams on 2019-10-10.
+ -->
+
+<aura:component description="AreaLocator" implements="flexipage:availableForRecordHome">
+
+<!--    CHECK IF THE RECORD'S PARK HAS A MAP IMAGE-->
+
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+
+
+</aura:component>
