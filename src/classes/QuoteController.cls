@@ -37,6 +37,10 @@ public with sharing class QuoteController {
 
         try {
 
+            Decimal unitTotal       = 0;
+            Decimal pitchTotal      = 0;
+            Decimal ancillaryTotal  = 0;
+
             List<SBQQ__QuoteLine__c> ancillaryLines      = new List<SBQQ__QuoteLine__c>();
             List<SBQQ__QuoteLine__c> pitchLines          = new List<SBQQ__QuoteLine__c>();
             List<SBQQ__QuoteLine__c> exceptionLines      = new List<SBQQ__QuoteLine__c>();
@@ -55,16 +59,22 @@ public with sharing class QuoteController {
 
                 if (line.SBQQ__Product__r.Family == 'Ancillary'){
                     ancillaryLines.add(line);
+                    ancillaryTotal += line.SBQQ__NetTotal__c;
                 } else if (line.SBQQ__Product__r.Family == 'Pitch'){
                     pitchLines.add(line);
+                    pitchTotal += line.SBQQ__NetTotal__c;
                 } else if (line.SBQQ__Product__r.Family == 'Unit'){
                     unitStockMap.put(line.StockItem__c,line);
+                    if (!line.SBQQ__Optional__c) unitTotal += line.SBQQ__NetTotal__c;
                 } else {
                     exceptionLines.add(line);
                 }
             }
 
             responseMap.put('apx__quote',quote);
+            responseMap.put('apx__unittotal',unitTotal);
+            responseMap.put('apx__pitchtotal',pitchTotal);
+            responseMap.put('apx__ancillarytotal',ancillaryTotal);
             responseMap.put('apx__ancillary',ancillaryLines);
             responseMap.put('apx__unitstockmap',unitStockMap);
             responseMap.put('apx__pitch',pitchLines);
@@ -99,18 +109,72 @@ public with sharing class QuoteController {
     @AuraEnabled
     public static Object upsertUnitLineApex(String quoteId, String unitId, String quoteLineId){
 
+        Map<String,Object> responseMap = new Map<String,Object>();
 
-        return null;
+        try {
+
+            List<SBQQ__QuoteLine__c> lines  = [SELECT Id FROM SBQQ__QuoteLine__c
+                                              WHERE SBQQ__Product__r.ProductCode = 'Caravan01'
+                                              AND SBQQ__Quote__c = :quoteId];
+            StockItem__c unit               = [SELECT Id, Name, Unit_Price__c FROM StockItem__c WHERE Id = :unitId];
+            SBQQ__QuoteLine__c line         = new SBQQ__QuoteLine__c();
+            line.SBQQ__Quote__c             = quoteId;
+            line.Id                         = quoteLineId != '' ? quoteLineId : null;
+            line.StockItem__c               = unit.Id;
+            line.SBQQ__Quantity__c          = 1;
+            line.SBQQ__Product__c           = [SELECT Id FROM Product2 WHERE ProductCode = 'Caravan01' LIMIT 1].Id;
+            line.SBQQ__Optional__c          = !lines.isEmpty();
+            line.SBQQ__Description__c       = unit.Name;
+            line.SBQQ__NetPrice__c          = unit.Unit_Price__c;
+            line.SBQQ__ListPrice__c         = unit.Unit_Price__c;
+            line.SBQQ__CustomerPrice__c     = unit.Unit_Price__c;
+
+            upsert line;
+
+            responseMap.put('apx__line',line);
+        } catch (Exception e){
+            responseMap.put('apx__error',e.getMessage());
+        }
+
+        return responseMap;
+    }
+
+    @AuraEnabled
+    public static Object deleteUnitLineApex(String quoteLineId){
+
+        Map<String,Object> responseMap = new Map<String,Object>();
+
+        try {
+            delete [SELECT Id FROM SBQQ__QuoteLine__c WHERE Id = :quoteLineId];
+            responseMap.put('apex__success',true);
+        } catch (Exception e){
+            responseMap.put('apx__error',e.getMessage());
+        }
+
+        return responseMap;
+
     }
 
 
     @AuraEnabled
     public static Object getUnitsApex(String recordId){
 
+        Set<Id> unitIds = new Set<Id>();
+
+        for (SBQQ__QuoteLine__c line : [SELECT Id, StockItem__c
+                                        FROM SBQQ__QuoteLine__c
+                                        WHERE SBQQ__Quote__c = :recordId
+                                        AND StockItem__c != NULL
+                                        AND SBQQ__Product__r.ProductCode = 'Caravan01']){
+            unitIds.add(line.StockItem__c);
+        }
+
         return [SELECT Id, Name, Width__c, Make__c, Manufacturer__c, Year_of_Manufacturer__c,
                         Berths__c, Bedrooms__c, Unit_Price__c,
-                    (SELECT Id,Image_URL__c FROM Images__r)
-                FROM StockItem__c];
+                    (SELECT Id,Image_URL__c FROM Images__r),
+                    (SELECT Id, SBQQ__Optional__c FROM Quote_Lines__r)
+                FROM StockItem__c
+                WHERE Id NOT IN :unitIds];
 
     }
 

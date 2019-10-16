@@ -5,12 +5,16 @@
     <aura:attribute name="responsePending" type="Boolean" default="false"/>
     <aura:attribute name="quotes" type="Object[]"/>
     <aura:attribute name="quote" type="Object"/>
+    <aura:attribute name="unittotal" type="Object"/>
+    <aura:attribute name="pitchtotal" type="Object"/>
+    <aura:attribute name="ancillarytotal" type="Object"/>
     <aura:attribute name="units" type="Object[]"/>
     <aura:attribute name="unitLines" type="Object[]"/>
     <aura:attribute name="selectedUnit" type="String"/>
     <aura:attribute name="selectingUnitLine" type="Integer"/>
     <aura:attribute name="checkedUnit" type="String"/>
     <aura:attribute name="selectedUnitLine" type="String"/>
+    <aura:attribute name="selectedUnitLineId" type="String"/>
     <aura:attribute name="unitSearch" type="Boolean" default="false"/>
     <aura:attribute name="unitFilter" type="Object" />
     <aura:attribute name="unitResults" type="Object[]"/>
@@ -56,7 +60,7 @@
 
             </div>
         </div>
-        <div class="quote-block pitches-block">
+        <div class="quote-block pitches-block" onfocusout="{!c.clearSelectingUnitLine}">
             <div class="block-title">
                 <span class="step">1</span>
                 <span>UNIT SELECTION:</span>
@@ -64,19 +68,26 @@
             <div class="search-navigator" >
                 <div class="unit-search-results">
                     <aura:iteration items="{!v.unitLines}" var="unitLine" indexVar="unitLineIndex">
-                        <div class="unit-column" data-unitnumber="{!(unitLineIndex + 1)}" onclick="{!c.setSelectingUnitLine}"
+                        <div class="unit-column" data-unitnumber="{!(unitLineIndex + 1)}" data-lineid="{!unitLine.Line ? unitLine.Line.Id : ''}" onclick="{!c.setSelectingUnitLine}"
                              style="{!or(not(v.selectingUnitLine),v.selectingUnitLine == (unitLineIndex + 1)) ? 'opacity:1' : 'opacity:0.5'}">
                             <aura:if isTrue="{!unitLine.Filled}">
                                 <div class="unit-title no-spill">{!unitLine.Name}</div>
                                 <div >
                                     <div class="slideshow-container">
                                         <aura:iteration items="{!unitLine.Images__r}" var="imageVar" indexVar="imageIndex">
+
                                             <div class="{!'mySlides fade ' + (imageVar.Active ? ' active-image ' : '')}">
                                                 <div class="numbertext">{!(imageIndex + 1) + ' / ' + unitLine.Images__r.length}</div>
                                                 <div style="height:130px;overflow: hidden;">
                                                     <img src="{!imageVar.Image_URL__c}" style="width:100%"/>
                                                 </div>
                                             </div>
+<!--                                            <div class="{!'mySlides fade ' + (imageVar.Active ? ' active-image ' : '')}">-->
+<!--                                                <div class="numbertext">{!(imageIndex + 1) + ' / ' + unitLine.Images__r.length}</div>-->
+<!--                                                <div style="height:130px;overflow: hidden;">-->
+<!--                                                    <img src="{!imageVar.Image_URL__c}" style="width:100%;"/>-->
+<!--                                                </div>-->
+<!--                                            </div>-->
                                         </aura:iteration>
                                         <aura:if isTrue="{!unitLine.Images__r.length &gt; 1}">
                                             <a class="prev" onclick="{!c.toggleIndex}"  data-unit="{!unitLineIndex}" data-direction="down" >&#10094;</a>
@@ -92,11 +103,16 @@
                                         </aura:if>
                                     </div>
                                     <div class="unit-details">
-                                        <div>{!unitLine.Make__c + ', ' + unitLine.Manufacturer__c + ', ' + unitLine.Year_of_Manufacturer__c}</div>
-<!--                                        <div class="unit-select-icon" onclick="{!c.checkUnit}" data-unitid="{!unitLine.Id}" data-index="{!unitIndex}"-->
-<!--                                             style="{!(unitLine.Id == v.checkedUnit || unitLine.Id == v.selectedUnit) ? 'display:block' : 'display:none'}">-->
-<!--                                            <lightning:icon iconName="{!unitLine.Id == v.checkedUnit ? 'action:approval' : 'action:check'}" size="small"/>-->
-<!--                                        </div>-->
+                                        <div>{!unitLine.Make__c + ', ' + unitLine.Manufacturer__c + ', ' + unitLine.Year_of_Manufacturer__c + ' len: ' + unitLine.Images__r.length}</div>
+                                        <div>spec {!v.selectingUnitLine} and  {!(unitLineIndex + 1)}</div>
+                                        <div><lightning:formattedNumber style="currency"  currencyCode="GBP" value="{!unitLine.Unit_Price__c}" currencyDisplayAs="symbol"/> </div>
+                                        <div class="unit-select-icon" style="{!(v.selectingUnitLine == (unitLineIndex + 1) &amp;&amp; unitLine.Line &amp;&amp; unitLine.Line.SBQQ__Optional__c == true) ? ' ' : 'display:none;' }"
+                                             onclick="{!c.deleteUnitLine}"  data-unitnumber="{!(unitLineIndex + 1)}" data-lineid="{!unitLine.Line.Id}">
+                                            <lightning:icon iconName="action:delete" size="small" />
+                                        </div>
+                                        <div class="unit-select-icon" style="{!and(unitLine.Line,not(unitLine.Line.SBQQ__Optional__c)) ? ' display:none; ' : '' }">
+                                            <lightning:icon iconName="action:check" size="small" />
+                                        </div>
                                     </div>
                                 </div>
 
@@ -106,136 +122,150 @@
                                     </div>
                                 </aura:set>
                             </aura:if>
-                            <!--                        <lightning:spinner />-->
+                            <aura:if isTrue="{!unitLine.Pending}">
+                                <lightning:spinner />
+                            </aura:if>
                         </div>
                     </aura:iteration>
                 </div>
-                <div style="{!'grid-template-columns: 95% 5%;width:98%;' + (v.selectingUnitLine ? 'display: grid;' : 'display: none;')}">
-                    <div>
-                        <input class="unit-search-input" type="text" onclick="{!c.showUnitSearch}" aura:id="unitSearch"
-                               style="{!'border:' + (v.unitSearch ? '0.5px solid lightgrey' : '0.5px solid #eaeaea')}" placeholder="search for available units..."/>
-                    </div>
-                    <div style="display: flex;justify-content: flex-end;width: 100%">
-                        <lightning:icon iconName="standard:search"/>
-                    </div>
-                </div>
-                <div class="unit-search" style="{!'display:' + (v.unitSearch ? 'block' : 'none')}">
-                    <div class="filter-panel" style="">
+                <div class="{!v.unitSearch ? ' modal-backdrop ' : ' '}" onclick="{!c.closeModal}"></div>
+                <div class="{!v.unitSearch ? ' search-nav-modal ' : ''}">
+                    <div style="{!v.unitSearch ? ' position: absolute;top:10px;z-index:35;width: 100%;background-color:white; ' : ''}">
+                    <div style="{!'grid-template-columns: 95% 5%;width:98%;' + (v.selectingUnitLine ? 'display: grid;' : 'display: none;')}">
                         <div>
-                            <div class="filter-option-container">
-                                <lightning:input type="range" min="1" max="250000" value="{!v.unitFilter.Price}"
-                                                 onchange="{!c.searchUnits}" label="Max Price"/>
-                            </div>
-                            <div class="filter-option-container">
-                                <lightning:select value="{!v.unitFilter.Type}"
-                                                  onchange="{!c.searchUnits}" label="Van Type">
-                                    <option></option>
-                                    <option value="Any">Any</option>
-                                    <option value="Static">Static</option>
-                                    <option value="Lodge">Lodge</option>
-                                    <option value="Chalet">Chalet</option>
-                                    <option value="Tourer / Motorhome">Tourer / Motorhome</option>
-                                </lightning:select>
-                            </div>
+                            <input class="unit-search-input" type="text" onclick="{!c.showUnitSearch}" aura:id="unitSearch"
+                                   style="{!'border:' + (v.unitSearch ? '0.5px solid lightgrey' : '0.5px solid #eaeaea')}" placeholder="search for available units..."/>
                         </div>
-                        <div>
-                            <div class="filter-option-container">
-                                <lightning:input type="range" min="1" max="5" value="{!v.unitFilter.Bedrooms}"
-                                                 onchange="{!c.searchUnits}" label="Bedrooms"/>
-                            </div>
-                            <div class="filter-option-container">
-                                <lightning:select value="{!v.unitFilter.Year}"
-                                                  onchange="{!c.searchUnits}" label="Year">
-                                    <option></option>
-                                    <option value="Any">Any</option>
-                                    <option value="Pre 2008">Pre 2008</option>
-                                    <option value="Post 2008">Post 2008</option>
-                                </lightning:select>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="filter-option-container">
-                                <lightning:input type="range" min="1" max="15" value="{!v.unitFilter.Berths}"
-                                                 onchange="{!c.searchUnits}" label="Berths"/>
-                            </div>
-                            <div class="filter-option-container">
-                                <lightning:select value="{!v.unitFilter.Status}"
-                                                  onchange="{!c.searchUnits}" label="Sales Status">
-                                    <option></option>
-                                    <option value="Any">Any</option>
-                                    <option value="In Stock">In Stock</option>
-                                    <option value="Out of Stock">Out of Stock</option>
-                                </lightning:select>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="filter-option-container">
-                                <lightning:input type="range" min="1" max="20" value="{!v.unitFilter.Width}"
-                                                 onchange="{!c.searchUnits}" label="Max Width (ft)"/>
-                            </div>
-                            <div class="filter-option-container">
-                                <!--                                <div>-->
-                                <!--                                    <lightning:input type="checkbox-button" label="Accessibility Unit" value=""/>-->
-                                <!--                                </div>-->
-                                <!--                                <div>-->
-                                <!--                                    <lightning:input type="checkbox-button" label="Show Margin" value=""/>-->
-                                <!--                                </div>-->
-                            </div>
-                        </div>
-                        <div>
-                            <div class="filter-option-container">
-                                <lightning:input type="range" min="1" max="15" value="{!v.unitFilter.Length}"
-                                                 onchange="{!c.searchUnits}" label="Max Length (ft)"/>
-                            </div>
-                            <div class="filter-option-container reset-button">
-                                <lightning:button value="RESET FILTERS" label="RESET FILERS"  />
-                            </div>
+                        <div style="display: flex;justify-content: flex-end;width: 100%">
+                            <lightning:icon iconName="standard:search"/>
                         </div>
                     </div>
-                </div>
-                <div class="unit-search-results" style="{!'display:' + (v.unitSearch ? 'grid' : 'none')}">
-                    <aura:iteration items="{!v.units}" var="unit" indexVar="unitIndex">
-                        <div class="{!'unit-column ' + (unit.Id == v.selectedUnit ? ' selected-unit ' : ' ')}"
-                             onclick="{!c.selectUnit}" data-unitid="{!unit.Id}">
-                            <div class="unit-title no-spill">{!unit.Name}</div>
-                            <div >
-                                <div class="slideshow-container">
-                                    <aura:iteration items="{!unit.Images__r}" var="imageVar" indexVar="imageIndex">
-                                        <div class="{!'mySlides fade ' + (imageVar.Active ? ' active-image ' : '')}">
-                                            <div class="numbertext">{!(imageIndex + 1) + ' / ' + unit.Images__r.length}</div>
-                                            <div style="height:130px;overflow: hidden;">
-                                                <img src="{!imageVar.Image_URL__c}" style="width:100%"/>
+                    <div class="unit-search" style="{!'display:' + (v.unitSearch ? 'block' : 'none')}">
+                        <div class="filter-panel" style="">
+                            <div>
+                                <div class="filter-option-container">
+                                    <lightning:input type="range" min="1" max="250000" value="{!v.unitFilter.Price}"
+                                                     onchange="{!c.searchUnits}" label="Max Price"/>
+                                </div>
+                                <div class="filter-option-container">
+                                    <lightning:select value="{!v.unitFilter.Type}"
+                                                      onchange="{!c.searchUnits}" label="Van Type">
+                                        <option></option>
+                                        <option value="Any">Any</option>
+                                        <option value="Static">Static</option>
+                                        <option value="Lodge">Lodge</option>
+                                        <option value="Chalet">Chalet</option>
+                                        <option value="Tourer / Motorhome">Tourer / Motorhome</option>
+                                    </lightning:select>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="filter-option-container">
+                                    <lightning:input type="range" min="1" max="5" value="{!v.unitFilter.Bedrooms}"
+                                                     onchange="{!c.searchUnits}" label="Bedrooms"/>
+                                </div>
+                                <div class="filter-option-container">
+                                    <lightning:select value="{!v.unitFilter.Year}"
+                                                      onchange="{!c.searchUnits}" label="Year">
+                                        <option></option>
+                                        <option value="Any">Any</option>
+                                        <option value="Pre 2008">Pre 2008</option>
+                                        <option value="Post 2008">Post 2008</option>
+                                    </lightning:select>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="filter-option-container">
+                                    <lightning:input type="range" min="1" max="15" value="{!v.unitFilter.Berths}"
+                                                     onchange="{!c.searchUnits}" label="Berths"/>
+                                </div>
+                                <div class="filter-option-container">
+                                    <lightning:select value="{!v.unitFilter.Status}"
+                                                      onchange="{!c.searchUnits}" label="Sales Status">
+                                        <option></option>
+                                        <option value="Any">Any</option>
+                                        <option value="In Stock">In Stock</option>
+                                        <option value="Out of Stock">Out of Stock</option>
+                                    </lightning:select>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="filter-option-container">
+                                    <lightning:input type="range" min="1" max="20" value="{!v.unitFilter.Width}"
+                                                     onchange="{!c.searchUnits}" label="Max Width (ft)"/>
+                                </div>
+                                <div class="filter-option-container">
+<!--                                <div>-->
+<!--                                    <lightning:input type="checkbox-button" label="Accessibility Unit" value=""/>-->
+<!--                                </div>-->
+<!--                                <div>-->
+<!--                                    <lightning:input type="checkbox-button" label="Show Margin" value=""/>-->
+<!--                                </div>-->
+                                </div>
+                            </div>
+                            <div>
+                                <div class="filter-option-container">
+                                    <lightning:input type="range" min="1" max="15" value="{!v.unitFilter.Length}"
+                                                     onchange="{!c.searchUnits}" label="Max Length (ft)"/>
+                                </div>
+                                <div class="filter-option-container reset-button">
+                                    <lightning:button value="RESET FILTERS" label="RESET FILERS"  />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                    <div class="unit-search-results scrollable" style="{!'display:' + (v.unitSearch ? 'grid' : 'none')}">
+                        <aura:iteration items="{!v.units}" var="unit" indexVar="unitIndex">
+                            <div class="{!'unit-column ' + (unit.Id == v.selectedUnit ? ' selected-unit ' : ' ')}"
+                                 onclick="{!c.selectUnit}" data-unitid="{!unit.Id}">
+                                <div class="unit-title no-spill">
+                                    <span>{!unit.Name + ' '}</span>
+                                    <span style="{!unit.Quote_Lines__r ? ' ' : 'display:none;'}" class="warning">{!'(IN ' + unit.Quote_Lines__r.length + ' QUOTES)'}</span>
+                                </div>
+                                <div >
+                                    <div class="slideshow-container">
+                                        <aura:iteration items="{!unit.Images__r}" var="imageVar" indexVar="imageIndex">
+                                            <div class="{!'mySlides fade ' + (imageVar.Active ? ' active-image ' : '')}">
+                                                <div class="numbertext">{!(imageIndex + 1) + ' / ' + unit.Images__r.length}</div>
+                                                <div style="height:130px;overflow: hidden;">
+                                                    <img src="{!imageVar.Image_URL__c}" style="width:100%"/>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </aura:iteration>
-                                    <aura:if isTrue="{!unit.Images__r.length &gt; 1}">
-                                        <a class="prev" onclick="{!c.toggleIndex}"  data-unit="{!unitIndex}" data-direction="down" >&#10094;</a>
-                                        <a class="next" onclick="{!c.toggleIndex}" data-unit="{!unitIndex}"  data-direction="up" >&#10095;</a>
-                                    </aura:if>
-                                </div>
-                                <br/>
-                                <div style="text-align:center;height: 17px;">
-                                    <aura:if isTrue="{!unit.Images__r.length &gt; 1}">
-                                        <aura:iteration items="{!unit.Images__r}" var="imageVar2" indexVar="imageIndex">
-                                            <span class="dot" onclick="{!c.toggleIndex}" data-imgindex="{!imageIndex}" data-unit="{!unitIndex}"></span>
                                         </aura:iteration>
-                                    </aura:if>
-                                </div>
-                                <div class="unit-details">
-                                    <div>{!unit.Make__c + ', ' + unit.Manufacturer__c + ', ' + unit.Year_of_Manufacturer__c}</div>
-                                    <div class="unit-select-icon" onclick="{!c.checkUnit}" data-unitid="{!unit.Id}" data-index="{!unitIndex}"
-                                         style="{!(unit.Id == v.checkedUnit || unit.Id == v.selectedUnit) ? 'display:block' : 'display:none'}">
-                                        <lightning:icon iconName="{!unit.Id == v.checkedUnit ? 'action:approval' : 'action:check'}" size="small"/>
+                                        <aura:if isTrue="{!unit.Images__r.length &gt; 1}">
+                                            <a class="prev" onclick="{!c.toggleIndex}"  data-unit="{!unitIndex}" data-direction="down" >&#10094;</a>
+                                            <a class="next" onclick="{!c.toggleIndex}" data-unit="{!unitIndex}"  data-direction="up" >&#10095;</a>
+                                        </aura:if>
+                                    </div>
+                                    <br/>
+                                    <div style="text-align:center;height: 17px;">
+                                        <aura:if isTrue="{!unit.Images__r.length &gt; 1}">
+                                            <aura:iteration items="{!unit.Images__r}" var="imageVar2" indexVar="imageIndex">
+                                                <span class="dot" onclick="{!c.toggleIndex}" data-imgindex="{!imageIndex}" data-unit="{!unitIndex}"></span>
+                                            </aura:iteration>
+                                        </aura:if>
+                                    </div>
+                                    <div class="unit-details">
+                                        <div>{!unit.Make__c + ', ' + unit.Manufacturer__c + ', ' + unit.Year_of_Manufacturer__c}</div>
+                                        <div>spec</div>
+                                        <div><lightning:formattedNumber style="currency" currencyCode="GBP" value="{!unit.Unit_Price__c}" currencyDisplayAs="symbol"/> </div>
+                                        <div class="unit-select-icon" onclick="{!c.checkUnit}" data-unitid="{!unit.Id}" data-index="{!unitIndex}"
+                                             style="{!(unit.Id == v.checkedUnit || unit.Id == v.selectedUnit) ? 'display:block' : 'display:none'}">
+                                            <lightning:icon iconName="{!unit.Id == v.checkedUnit ? 'action:approval' : 'action:check'}" size="small"/>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </aura:iteration>
+                        </aura:iteration>
+                    </div>
                 </div>
             </div>
             <!--        </div>-->
             <div class="price-block">
-                <div>£46,776.80</div>
+                <div>
+                    <lightning:formattedNumber style="currency" currencyCode="GBP" value="{!v.unittotal}" currencyDisplayAs="symbol"/>
+                </div>
             </div>
         </div>
         <div class="quote-block">
@@ -275,7 +305,9 @@
                 </div>
             </div>
             <div class="price-block">
-                <div>£21,562.13</div>
+                <div>
+                    <lightning:formattedNumber style="currency" currencyCode="GBP" value="{!v.pitchtotal}" currencyDisplayAs="symbol"/>
+                </div>
             </div>
         </div>
         <div class="quote-block">
@@ -283,8 +315,19 @@
                 <span class="step">3</span>
                 <span>ANCILLARIES:</span>
             </div>
+            <div class="block-action-panel">
+                <div class="search-navigator">
+                    <div>
+                        <div>REQUIRED ANCILLARIES</div>
+                        <div>What's included</div>
+                    </div>
+                </div>
+            </div>
+
             <div class="price-block">
-                <div>£1,671.00</div>
+                <div>
+                    <lightning:formattedNumber style="currency" currencyCode="GBP" value="{!v.ancillarytotal}" currencyDisplayAs="symbol"/>
+                </div>
             </div>
         </div>
     </aura:if>

@@ -1,0 +1,63 @@
+<aura:component controller="ZonePlotter" implements="flexipage:availableForRecordHome,force:hasRecordId" access="global">
+    
+  <!-- Attributes -->
+  <aura:attribute name="recordId" type="String" default="a2R4J000000e43FUAQ"></aura:attribute>
+  <aura:attribute name="zones" type="List" default="[]"></aura:attribute>
+  <aura:attribute name="deleted" type="List" default="[]"></aura:attribute>
+  <aura:attribute name="points" type="List" default="[]"></aura:attribute>
+  <aura:attribute name="plotting" type="Boolean" default="false"></aura:attribute>
+  <aura:attribute name="loading" type="Boolean" default="true"></aura:attribute>
+    
+  <!-- Events -->
+  <aura:handler name="init" value="{!this}" action="{!c.setupCanvas}"/>
+   
+  <!-- Component Wrap -->
+  <div class="zp" aura:id="zp" id="zp">
+      
+    <!-- Loading Spinner -->
+    <aura:if isTrue="{!v.loading}">
+      <lightning:spinner alternativeText="Loading" size="small" />  
+    </aura:if>
+      
+    <!-- Canvas / Image -->
+    <div class="{! 'zp-wrap ' + v.plotting}" onclick="{!c.plotZone}">
+        <img width="600" height="400" src="{!'/resource/1/' + v.recordId + 'Areas'}"/>
+      <canvas aura:id="zp-canvas" id="zp-canvas" width="600" height="400"></canvas>
+      <aura:if isTrue="{!and(v.plotting == true, v.points.length == 0)}">
+        <div class="zp-wrap--hint">
+          Click on the map to start drawing.<br/>
+        </div>  
+      </aura:if>
+    </div>
+      
+    <!-- Zones Sidebar -->
+    <div class="zp-zones">
+        
+      <!-- Action Headers -->
+      <div class="zp-zones--header">     
+        <lightning:button onclick="{!c.saveZones}" variant="brand" disabled="{!v.zones.length == 0}">Save {!v.zones.length == 1 ? 'Zone' : 'Zones'}</lightning:button>
+        <lightning:button onclick="{!c.addZone}">Add New Zone</lightning:button> 
+      </div>
+        
+      <!-- Zone Items -->
+      <ul class="zp-zones--list slds-nav-vertical slds-nav-vertical_shade">
+        <aura:iteration items="{!v.zones}" var="z" indexVar="zi">
+          <li>
+            <lightning:input type="text" value="{!z.name}" />
+            <lightning:select value="{!z.type}">
+              <option value="">Please select</option>
+              <option value="Starter">Starter</option>
+              <option value="Standard">Standard</option>
+              <option value="Premium">Premium</option>
+              <option value="Platinum">Platinum</option>
+            </lightning:select>
+            <lightning:buttonIcon name="{!zi}" iconName="utility:delete" onclick="{!c.removeZone}"></lightning:buttonIcon>
+          </li>  
+        </aura:iteration>  
+      </ul>
+        
+    </div>
+      
+  </div>
+	
+</aura:component>

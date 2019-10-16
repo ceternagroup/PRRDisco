@@ -1,0 +1,90 @@
+.THIS.zp {
+  width: 960px;
+  position: relative;
+  height: 400px;
+}
+
+.THIS .zp-canvas {
+  position: relative;
+  z-index: 20;
+}
+
+.THIS .zp-wrap {
+  position: relative;
+  width: 600px;
+  height: 400px;
+  z-index: 1;
+}
+
+.THIS .zp-wrap.true {
+  cursor: crosshair;
+}
+
+.THIS .zp-wrap > * {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 600px;
+  height: 400px;
+}
+
+.THIS .zp-wrap > img {
+  pointer-events: none;
+}
+
+.THIS .zp-zones {
+  position: absolute;
+  background: #FAFAFB;
+  right: 0;
+  top: 0;
+  width: 360px;
+  bottom: 0;
+  z-index: 10;
+}
+
+.THIS .zp-zones--header {
+  height: 52px;
+  padding: 10px;
+  background: #f3f2f2;
+}
+.THIS .zp-zones--header > * {
+  float: right;
+  margin-left: 10px;
+}
+
+.THIS .zp-zones ul {
+  background: #fff;
+  height: calc(100% - 52px);
+  padding: 5px 0;
+}
+
+.THIS .zp-zones ul li {
+  margin: 5px 0px;
+  padding: 0px 5px;
+  height: 37px;
+  border-bottom: 1px solid #dddbda;
+}
+.THIS .zp-zones ul li:last-child {
+  border: 0px;
+}
+
+.THIS .zp-zones ul li > * {
+  float: left;
+  margin-right: 5px;
+}
+
+.THIS .zp-zones ul li select {
+  width: 100px;
+}
+
+.THIS .zp-zones ul li label {
+  display: none;
+}
+
+.THIS .zp-wrap--hint {
+  background: rgba(0, 0, 0, 0.2);
+  line-height: 400px;
+  text-align: center;
+  color: #fff;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}

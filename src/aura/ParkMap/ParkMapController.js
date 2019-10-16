@@ -9,33 +9,6 @@
         $H.resetUnitFilter($C);
         $H.getQuotes($C);
 
-        var getUnitsApex = $C.get('c.getUnitsApex');
-        getUnitsApex.setParams({ recordId : $C.get('v.recordId')});
-        getUnitsApex.setCallback(this, function(response){
-           if (response.getState() === 'SUCCESS'){
-
-               console.log('response',response.getReturnValue());
-
-               var units = response.getReturnValue();
-               units.forEach(function(unit){
-                  if (unit.Images__r){
-                      unit.Images__r[0].Active = true;
-                  } else {
-                      unit.Images__r = [];
-                      unit.Images__r.push({
-                              Active: true,
-                              Id: "none",
-                              Image_URL__c: "https://1m19tt3pztls474q6z46fnk9-wpengine.netdna-ssl.com/wp-content/themes/unbound/images/No-Image-Found-400x264.png",
-                              StockItem__c: "a2T4J000000f6lNUAQ"}
-                      );
-                  }
-               });
-
-               $C.set('v.units',units);
-           }
-        });
-        $A.enqueueAction(getUnitsApex);
-
         var getPitcheAreasApex = $C.get('c.getPitcheAreasApex');
         getPitcheAreasApex.setParams({ recordId : $C.get('v.recordId')});
         getPitcheAreasApex.setCallback(this, function(response){
@@ -73,12 +46,24 @@
     setSelectingUnitLine : function($C,$E,$H) {
         var sourceData = $E.currentTarget.dataset;
         $C.set('v.selectingUnitLine', parseInt(sourceData.unitnumber));
+        $C.set('v.selectingUnitLineId', sourceData.lineid);
         $C.set('v.unitSearch',false);
+
+
+        // todo: need to set value of checked unit IF there is a unit checked
         $C.set('v.checkedUnit','');
         console.log('unit line selected is ', sourceData.unitnumber);
     },
+    clearSelectingUnitLine : function($C,$E,$H) {
+        // $C.set('v.selectingUnitLine', '');
+        // $C.set('v.unitSearch',false);
+        // $C.set('v.checkedUnit','');
+    },
     showUnitSearch : function($C,$E,$H){
         $C.set('v.unitSearch',true);
+    },
+    closeModal : function($C,$E,$H){
+        $C.set('v.unitSearch',false);
     },
     searchUnits : function($C,$E,$H){
         var search = $C.get('v.unitFilter');
@@ -123,22 +108,56 @@
         var sourceData  = $E.currentTarget.dataset;
         $C.set('v.checkedUnit',sourceData.unitid);
 
-        var units       = $C.get('v.units');
-        var unit        = units[parseInt(sourceData.index)];
+        var units               = $C.get('v.units');
+        var unit                = units[parseInt(sourceData.index)];
+        var unitLines           = $C.get('v.unitLines');
+        var selectingUnitLine   = $C.get('v.selectingUnitLine');
 
-        var unitLines   = $C.get('v.unitLines');
-        var selectingUnitLine = $C.get('v.selectingUnitLine');
-
-        console.log('selecting unit',selectingUnitLine);
-
-        unit.Filled = true;
-        unitLines[selectingUnitLine -1] = unit;
-
-
+        unitLines[selectingUnitLine - 1].Pending = true;
         $C.set('v.unitLines',unitLines);
+        $C.set('v.unitSearch',false);
 
-        console.log('unit',unit);
 
+        var upsertUnitLineApex = $C.get('c.upsertUnitLineApex');
+        upsertUnitLineApex.setParams({
+            quoteId : $C.get('v.quote.Id'),
+            unitId : unit.Id,
+            quoteLineId : unitLines[selectingUnitLine - 1].Line ? unitLines[selectingUnitLine - 1].Line.Id : ''
+        });
+        upsertUnitLineApex.setCallback(this, function (response) {
+
+            var data = response.getReturnValue();
+
+            if (response.getState() === 'SUCCESS' && !data.apx__error){
+                $H.getQuoteDetail($C,$C.get('v.quote.Id'));
+            }
+
+        });
+        $A.enqueueAction(upsertUnitLineApex);
+
+
+    },
+    deleteUnitLine : function($C,$E,$H){
+
+        var sourceData  = $E.currentTarget.dataset;
+        $E.stopPropagation();
+
+        var unitLines           = $C.get('v.unitLines');
+        var selectingUnitLine   = $C.get('v.selectingUnitLine');
+
+        unitLines[selectingUnitLine - 1].Pending = true;
+        $C.set('v.unitLines',unitLines);
+        $C.set('v.unitSearch',false);
+
+        var deleteUnitLineApex = $C.get('c.deleteUnitLineApex');
+        deleteUnitLineApex.setParams({quoteLineId : sourceData.lineid});
+        deleteUnitLineApex.setCallback(this, function (response) {
+            var data = response.getReturnValue();
+            if (response.getState() === 'SUCCESS' && !data.apx__error){
+                $H.getQuoteDetail($C,$C.get('v.quote.Id'));
+            }
+        });
+        $A.enqueueAction(deleteUnitLineApex);
     }
 
 });
