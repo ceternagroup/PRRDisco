@@ -284,11 +284,13 @@
                             <div>Sundrum Castles areas {!v.areas.length}</div>
                             <div class="pitch-image-block" onclick="{!c.setSelectingArea}">
                                 <div class="pitch-image-container">
-                                    <img src="{!'/resource/' + 'a2R4J000000e43FUAQ' + 'Areas'}" />
+<!--                                    <img src="{!'/resource/' + 'a2R4J000000e43FUAQ' + 'Areas'}" />-->
+                                    <img src="{!'/resource/' + 'a2R4J000000e43FUAQ' + 'Areas'}" width="600" height="400" />
                                     <aura:iteration items="{!v.areas}" var="area" indexVar="areaIndex">
-                                        <img src="{!'/resource/ParkOverlay'}" class="{!'area-overlay-image ' + (area.Id == v.selectedArea.Id ? ' selected-area ' : '')}"
-                                             style="{!'clip-path: polygon(' + area.ClipPath__c + ');' }"
-                                             onclick="{!c.setSelectedArea}" data-index="{!areaIndex}"/>
+<!--                                        <img src="{!'/resource/ParkOverlay'}" class="{!'area-overlay-image ' + (area.Id == v.selectedArea.Id ? ' selected-area ' : '')}"-->
+<!--                                             style="{!'clip-path: polygon(' + area.ClipPath__c + ');' }"-->
+<!--                                             onclick="{!c.setSelectedArea}" data-index="{!areaIndex}"/>-->
+                                        <canvas width="600" height="600"/>
                                     </aura:iteration>
                                 </div>
                             </div>

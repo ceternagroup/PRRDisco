@@ -1,0 +1,38 @@
+<!--
+ - Created by ronanwilliams on 2019-10-16.
+ -->
+
+<aura:component description="AreaMapper"
+                implements="flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes"
+                controller="AreaMapperController">
+
+    <aura:attribute name="areas" type="Object[]"/>
+    <aura:attribute name="dragLeftStart" type="Object"/>
+    <aura:attribute name="dragTopStart" type="Object"/>
+
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+
+    <div class="container">
+
+        <div style="position: relative;width:100%;height:auto;">
+            <img  src="{!'/resource/1/' + v.recordId + 'Areas'}" onclick="{!c.checkChords}" aura:id="img"
+                  class="grey" style="position: relative;"/>
+
+            <div style="position: absolute;top:0;left:0;height:100%;width:100%;">
+                <aura:iteration items="{!v.areas}" var="area" indexVar="areaIndex">
+
+                    <img src="{!'/resource/1/' + v.recordId + 'Areas'}" class="area"  data-areaindex="{!areaIndex}"
+                         style="{!'clip-path: polygon(' + area.ClipPath__c + ')'}"
+                         draggable="true" ondragstart="{!c.startAreaDrag}" ondrag="{!c.handleAreaDrag}" ondragend="{!c.handleAreaDrag}"/>
+                    <aura:iteration items="{!area.Plots}" var="plot" indexVar="plotIndex">
+                        <span style="{!'top:' + plot[1] + ';left:' + plot[0] + ';'}" class="plot" draggable="true"
+                              ondragend="{!c.handleDrag}" onclick="{!c.handleDrag}"
+                              data-index="{!plotIndex}" data-areaindex="{!areaIndex}"></span>
+                    </aura:iteration>
+
+                </aura:iteration>
+            </div>
+        </div>
+
+    </div>
+</aura:component>

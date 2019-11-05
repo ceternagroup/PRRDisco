@@ -5,10 +5,13 @@
     var params = {
       parkId: $C.get('v.recordId')
     };
+
+    console.log('park id',$C.get('v.recordId'));
+
     $H.serverAction($C, 'c.getZones', params, function(err, res) {
       if (err) return console.error(err);
       var data = $H.mapSFtoJS($H, res);
-      console.log(data);
+      console.log('server data',data);
       $C.set('v.zones', data);
       $H.updateZones($C, $H, null);
     });
@@ -29,6 +32,8 @@
       zones: zones,
       deleted: deleted
     };
+
+    console.log('server action params', params.zones[0].Park__c);
     $H.serverAction($C, 'c.updateZones', params, function(err, res) {
       if (err) return console.error(err);
       $C.set('v.deleted', []);
@@ -55,7 +60,7 @@
   plotZone: function($C, $E, $H) {
     // need the boundary to get correct offset of mouse x + y
     var boundary = $C.find('zp').getElement().getBoundingClientRect();
-    if ($C.get('v.plotting') == true) { // only if plotting mode
+    if ($C.get('v.plotting') === true) { // only if plotting mode
       var points = $C.get('v.points');
       var first = points[0];
       var next = {

@@ -81,7 +81,7 @@
         context.arc(points[a].x, points[a].y, 1, 0, 2 * Math.PI);  
       }
       context.stroke();
-      if (zone == true) context.fill();
+      if (zone === true) context.fill();
     }
   },
     

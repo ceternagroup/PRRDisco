@@ -1,0 +1,45 @@
+/**
+ * Created by ronanwilliams on 2019-10-17.
+ */
+
+.THIS.container {
+    height: auto;
+}
+
+.THIS img {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.THIS .grey {
+    -webkit-filter: grayscale(65%); /* Safari 6.0 - 9.0 */
+    filter: grayscale(65%);
+    opacity: 0.7;
+}
+
+.THIS .area {
+    /*border: 1px solid black;*/
+    cursor: grab;
+}
+
+.THIS .plot {
+    height: 10px;
+    width: 10px;
+    margin-left: -5px;
+    margin-top: -5px;
+    border-radius: 50%;
+    background-color: white;
+    border: 1px solid black;
+    z-index:10;
+    position: absolute;
+    cursor:pointer;
+}
+
+.THIS .plot:hover {
+    height: 20px;
+    width: 20px;
+    margin-left: -10px;
+    margin-top: -10px;
+
+}

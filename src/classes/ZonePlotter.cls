@@ -28,6 +28,10 @@ public without sharing class ZonePlotter {
    */
   @AuraEnabled
   public static String updateZones(List<Area_Zone__c> zones, List<Area_Zone__c> deleted) {
+
+    system.debug(zones);
+
+
     try {
       delete deleted;
       upsert zones;
